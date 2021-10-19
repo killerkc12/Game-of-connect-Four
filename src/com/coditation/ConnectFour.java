@@ -8,7 +8,11 @@ import java.util.stream.IntStream;
 public class ConnectFour {
 
     // we define characters for players (R for Red, Y for Yellow)
-    private static final char[] PLAYERS = {'R', 'Y'};
+    private static final char[] PLAYERS = {'1', '2'};
+    // colors for the players
+    private static final char[] COLORS = {'r','y'};
+    // number of pieces
+    private int pieces;
     // dimensions for our board
     private final int width, height;
     // grid for the board
@@ -16,9 +20,10 @@ public class ConnectFour {
     // we store last move made by a player
     private int lastCol = -1, lastTop = -1;
 
-    public ConnectFour(int w, int h) {
+    public ConnectFour(int w, int h, int p) {
         width = w;
         height = h;
+        pieces = p;
         grid = new char[h][];
 
         // init the grid will blank cell
@@ -101,9 +106,14 @@ public class ConnectFour {
             return false;
         }
 
-        char sym = grid[lastTop][lastCol];
         // winning streak with the last play symbol
-        String streak = String.format("%c%c%c%c", sym, sym, sym, sym);
+        String streak = "";
+        char sym = grid[lastTop][lastCol];
+        for (int i = 0; i < pieces; i++) {
+            streak += sym;
+        }
+
+//        String streak1 = String.format("%c%c%c%c", sym, sym, sym, sym);
 
         // check if streak is in row, col,
         // diagonal or backslash diagonal
@@ -114,9 +124,9 @@ public class ConnectFour {
     }
 
     // prompts the user for a column, repeating until a valid choice is made
-    public void chooseAndDrop(char symbol, Scanner input) {
+    public void chooseAndDrop(char symbol, Scanner input, int player) {
         do {
-            System.out.println("\nPlayer " + symbol + " turn: ");
+            System.out.print("\nPlayer " + (player+1) + ", what column do you want to put your piece? ");
             int col = input.nextInt();
 
             // check if column is ok
@@ -145,24 +155,57 @@ public class ConnectFour {
         try (Scanner input = new Scanner(System.in)) {
             // we define some variables for our game like
             // dimensions and nb max of moves
-            int height = 6; int width = 8; int moves = height * width;
+            int height = 6; int width = 7; int pieces = 0; int moves = height * width;
+
+            //accepting inputs
+            System.out.print("Enter the values saperated by spaces -r -c -p: ");
+            width = input.nextInt();
+            height = input.nextInt();
+            pieces = input.nextInt();
+
+            //condition for pieces
+            while (pieces <= 0) {
+                if (pieces == 0) {
+                    System.out.println("You cannot have 0 pieces to connect.");
+                }
+                else if (pieces < 0) {
+                    System.out.println("You cannot have a negative pieces to connect:");
+                }
+                System.out.print("\nPlease Enter a positive, non-zero integer for the number of pieces to connect: ");
+                pieces = input.nextInt();
+            }
 
             // we create the ConnectFour instance
-            ConnectFour board = new ConnectFour(width, height);
+            ConnectFour board = new ConnectFour(width, height, pieces);
+
+            // accepting the player one choice for the color
+            System.out.print("\nPlayer one, do you want red or yellow (r or y): ");
+            String color = input.next();
+
+            // checking the entered choice is correct or not
+            while (! (color.equals("r") || color.equals("y"))) {
+                    System.out.print("Please, enter valid color: ");
+                    color = input.next();
+            }
 
             // we explain users how to enter their choices
             System.out.println("Use 0-" + (width - 1) + " to choose a column");
             // we display initial board
             System.out.println(board);
 
+            if (color.equals("y")) {
+                COLORS[0] = 'y';
+                COLORS[1] = 'r';
+            }
+
             // we iterate until max nb moves be reached
             // simple trick to change player turn at each iteration
             for (int player = 0; moves-- > 0; player = 1 - player) {
                 // symbol for current player
-                char symbol = PLAYERS[player];
+                char symbol = COLORS[player];
 
                 // we ask user to choose a column
-                board.chooseAndDrop(symbol, input);
+                board.chooseAndDrop(symbol, input, player);
 
                 // we display the board
                 System.out.println(board);
@@ -170,8 +213,16 @@ public class ConnectFour {
                 // we need to check if a player won. If not,
                 // we continue, otherwise, we display a message
                 if (board.isWinningPlay()) {
-                    System.out.println("\nPlayer " + symbol + " wins!");
-                    return;
+                    System.out.println("\nPlayer " + (player+1) + " wins!");
+                    System.out.println("\nDo you want to play again (0-no, 1-yes)? ");
+                    if(input.nextInt() == 0) {
+                        return;
+                    }
+                    else {
+                        System.out.println("\nLets play again,");
+                        player = 1;
+                        board = new ConnectFour(width, height, pieces);
+                    }
                 }
             }
 
